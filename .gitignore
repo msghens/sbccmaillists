@@ -1,4 +1,5 @@
 #MSG Stuff
+secrets.py
 *.json
 *.dat
 
