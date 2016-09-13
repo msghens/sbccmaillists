@@ -4,20 +4,36 @@
 import httplib2
 import os
 
-from apiclient import discovery
+from apiclient import discovery,errors
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
+from listmaster import listmasters
+from ora_list import ora_sbcc_lists
 
 class googLib:
 	
 
 	
-	def __init__(self):
+	def __init__(self,ggroup,sql):
+		
+		#Owners need to be read in
+		self.owners = listmasters
 	
+		self.ggroup = ggroup
 		credentials = self.get_credentials()
 		http = credentials.authorize(httplib2.Http())
 		self.service = discovery.build('admin', 'directory_v1', http=http)
+		
+		#Get members from banner
+		with ora_sbcc_lists() as listm:
+			self.listmembers = listm.get_ban_list(sql)
+		
+		#remove owners
+		self.listmembers = [n for n in self.listmembers not in self.owners]
+			
+		#get members from google
+		self.ggroupmembers = self.getGoogGroup()
 		
 
 	def get_credentials(self):
@@ -67,8 +83,9 @@ class googLib:
 		
 		
 
-	def getGoogGroup(self,service,ggroup):
-			groupKey = ggroup + '@pipeline.sbcc.edu'
+	def getGoogGroup(self):
+			groupKey = self.ggroup
+			service = self.service.members()
 			all_users = []
 			page_token = None
 			params = {'groupKey': groupKey}
@@ -107,8 +124,10 @@ class googLib:
 					#~ member_body = { "email": emailaddress }
 					#~ member_body = json.dumps(member_body)
 					print member_body
-	def getGoogGroup(service,ggroup):
-			groupKey = ggroup + '@pipeline.sbcc.edu'
+
+	def getGoogGroup(self):
+			groupKey = self.ggroup
+			service = self.service.members()
 			all_users = []
 			page_token = None
 			params = {'groupKey': groupKey}
@@ -129,56 +148,22 @@ class googLib:
 							print 'An error occurred: %s' % error
 							break
 
-			user = set()
+			user = list()
 			for i in all_users:
-											#~ print json.dumps(i)
-					#~ if (i['role'] == 'MEMBER'):
-											if '@' in i['email']:
-													user.add(i['email'].split('@')[0])
-											else:
-													user.add(i['email'])
+				if i['email'] not in user and 'MEMBER' in i['role']:
+					user.append(i['email'])
+					print i['role']
 			return user
 
 
-	def insert_member_google(service,groupEmail,group_member):
+	def insert_member_google(self,service,groupEmail,group_member):
 			#Sends the update to google.
 					emailaddress = '"' + displayname[group_member] + '"' + ' <' + group_member + '@pipeline.sbcc.edu>'
 					member_body = { "email": group_member + '@pipeline.sbcc.edu'}
 					#~ member_body = { "email": emailaddress }
 					#~ member_body = json.dumps(member_body)
 					print member_body
-	def getGoogGroup(service,ggroup):
-			groupKey = ggroup + '@pipeline.sbcc.edu'
-			all_users = []
-			page_token = None
-			params = {'groupKey': groupKey}
-			
-
-
-			while True:
-					try:
-							if page_token:
-									params['pageToken'] = page_token
-							current_page = service.list(**params).execute()
-							all_users.extend(current_page['members'])
-							page_token = current_page.get('nextPageToken')
-							if not page_token:
-									break
-
-					except errors.HttpError as error:
-							print 'An error occurred: %s' % error
-							break
-
-			user = set()
-			for i in all_users:
-											#~ print json.dumps(i)
-					#~ if (i['role'] == 'MEMBER'):
-											if '@' in i['email']:
-													user.add(i['email'].split('@')[0])
-											else:
-													user.add(i['email'])
-			return user
-
+					
 
 	def insert_member_google(service,groupEmail,group_member):
 			#Sends the update to google.
