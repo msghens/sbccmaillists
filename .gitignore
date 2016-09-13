@@ -1,4 +1,8 @@
 #MSG Stuff
+list-managers.py
+test.py
+
+listmaster.py
 secrets.py
 *.json
 *.dat
