@@ -15,7 +15,9 @@ listname = 'list@sbcc.edu or list-group@pipeline.sbcc.edu'
 # This should call a view in schema sbcc_listsrv
 sql = "select 1 from dual"
 
+_list = googLib(listname)
 
 
 
-
+#Inistate processing
+_list = googLib(listname)

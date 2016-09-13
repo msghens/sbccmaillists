@@ -19,6 +19,12 @@ class ora_sbcc_lists(object):
 	def __exit__(self,type,value,traceback):
 		self.__db.close()
 		
+	def rows_to_list(self,cursor):
+		l = list()
+		for row in cursor:
+			l.append(row[0])
+		return l
+	
 	def get_ban_list(self,sql):
 		
 		select_sql = sql
@@ -27,6 +33,7 @@ class ora_sbcc_lists(object):
 		self.__cursor.execute(sql)
 		#~ D = dict(self.__cursor.fetchall())
 		#~ return D
-		return self.__cursor.fetchall()
+		#return self.__cursor.fetchall()
+		return self.rows_to_list(self.__cursor)
 		
 		
