@@ -8,8 +8,13 @@ from apiclient import discovery,errors
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
-from listmaster import listmasters
+from listmaster import listmasters,rmggmemlist
 from ora_list import ora_sbcc_lists
+import sys
+
+import logging
+
+logger = logging.getLogger('root')
 
 class googLib:
 	
@@ -30,10 +35,24 @@ class googLib:
 			self.listmembers = listm.get_ban_list(sql)
 		
 		#remove owners
-		self.listmembers = [n for n in self.listmembers not in self.owners]
+		self.listmembers = self.listmembers - self.owners
 			
 		#get members from google
 		self.ggroupmembers = self.getGoogGroup()
+		
+		#remove manager list(hack)
+		self.ggroupmembers = self.ggroupmembers - rmggmemlist
+		
+		#send to list
+		for member in self.listmembers.difference(self.ggroupmembers):
+			logger.info("Adding member: " + member)
+			self.insert_member_google(member)
+			
+		#delete from list	
+		for member in self.ggroupmembers.difference(self.listmembers):
+			logger.info("Deleting member: " + member)
+			self.delete_member_google(member)
+			#delete from list
 		
 
 	def get_credentials(self):
@@ -117,14 +136,6 @@ class googLib:
 			return user
 
 
-	def insert_member_google(service,groupEmail,group_member):
-			#Sends the update to google.
-					emailaddress = '"' + displayname[group_member] + '"' + ' <' + group_member + '@pipeline.sbcc.edu>'
-					member_body = { "email": group_member + '@pipeline.sbcc.edu'}
-					#~ member_body = { "email": emailaddress }
-					#~ member_body = json.dumps(member_body)
-					print member_body
-
 	def getGoogGroup(self):
 			groupKey = self.ggroup
 			service = self.service.members()
@@ -152,31 +163,21 @@ class googLib:
 			for i in all_users:
 				if i['email'] not in user and 'MEMBER' in i['role']:
 					user.append(i['email'])
-					print i['role']
-			return user
+					#~ print i['role']
+			return set(user)
 
 
-	def insert_member_google(self,service,groupEmail,group_member):
+	def insert_member_google(self,group_member):
 			#Sends the update to google.
-					emailaddress = '"' + displayname[group_member] + '"' + ' <' + group_member + '@pipeline.sbcc.edu>'
-					member_body = { "email": group_member + '@pipeline.sbcc.edu'}
-					#~ member_body = { "email": emailaddress }
-					#~ member_body = json.dumps(member_body)
-					print member_body
-					
-
-	def insert_member_google(service,groupEmail,group_member):
-			#Sends the update to google.
-					emailaddress = '"' + displayname[group_member] + '"' + ' <' + group_member + '@pipeline.sbcc.edu>'
-					member_body = { "email": group_member + '@pipeline.sbcc.edu'}
-					#~ member_body = { "email": emailaddress }
-					#~ member_body = json.dumps(member_body)
-					print member_body
+					#~ emailaddress = group_member
+					member_body = { "email": group_member}
+					#~ print member_body
 					for n in range(0, 5):
 							try:
-									results = service.insert(groupKey=groupEmail, body = member_body).execute()
-									print json.dumps(results, indent=4)
-									print 'Updated: {0}'.format(groupEmail) 
+									results = self.service.members().insert(groupKey=self.ggroup, body = member_body).execute()
+									#~ print json.dumps(results, indent=4)
+									#~ print 'Updated: {0}'.format(groupEmail)
+									logger.debug("added " + group_member + " to " + self.ggroup)
 									return results
 							except errors.HttpError, e:
 									error = simplejson.loads(e.content)
@@ -190,20 +191,21 @@ class googLib:
 									time.sleep((2 ** n) + random.randint(0, 1000) / 1000)
 							except Exception,e:
 											print str(e)
-											print 'problems with group: {0}'.format(groupEmail)
+											print 'problems with group: {0}'.format(self.ggroup)
 											sys.exit('Could not update')
 											#raise
 
-	def delete_member_google(service,groupEmail,group_member):
+	def delete_member_google(self,group_member):
 			#Sends the update to google.
 					#~ member_body = { "email": group_member + '@pipeline.sbcc.edu'}
 					#~ print member_body
 					for n in range(0, 5):
 							try:
-									results = service.delete(groupKey=groupEmail, 
-										memberKey = group_member + '@pipeline.sbcc.edu').execute()
+									results = self.service.members().delete(groupKey=self.ggroup, 
+										memberKey = group_member ).execute()
 									#~ print json.dumps(results, indent=4)
-									#~ print 'Updated: {0}'.format(groupEmail) 
+									#~ print 'Updated: {0}'.format(groupEmail)
+									logger.debug("deleted " + group_member + " to " + self.ggroup) 
 									return results
 							except errors.HttpError, e:
 									error = simplejson.loads(e.content)
@@ -215,6 +217,10 @@ class googLib:
 									time.sleep((2 ** n) + random.randint(0, 1000) / 1000)
 							except Exception,e:
 											print str(e)
-											print 'problems with group: {0}'.format(groupEmail)
+											print 'problems with group: {0}'.format(self.ggroup)
 											sys.exit('Could not update')
 											#raise
+
+	def list_diff(a,b):
+		#Equivialant for list as set math a - b
+		return [n for n in a not in b]

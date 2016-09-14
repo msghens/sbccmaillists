@@ -6,24 +6,41 @@ http://www.oracle.com/technetwork/articles/dsl/prez-transactions-lobs-089563.htm
 import cx_Oracle
 from secrets import banHOST,banUSER,banPASS,banPORT,banSID
 
+import logging
+
+logger = logging.getLogger('root')
 
 class ora_sbcc_lists(object):
 	
 	
 	def __enter__(self):
 		dsn_tns = cx_Oracle.makedsn(banHOST, banPORT, banSID)
-		self.__db = cx_Oracle.connect(banUSER, banPASS, dsn_tns)
-		self.__cursor = self.__db.cursor()
+		try:
+			self.__db = cx_Oracle.connect(banUSER, banPASS, dsn_tns)
+			self.__cursor = self.__db.cursor()
+		except cx_Oracle.DatabaseError as e:
+			error, = e.args
+			if error.code == 1017:
+				logger.error('Please check your credentials.')
+			else:
+				logger.error('Database connection error: %s'.format(e))
+			raise
+			
 		return self
 		
 	def __exit__(self,type,value,traceback):
-		self.__db.close()
+		try:
+			self.__cursor.close()
+			self.__db.close()
+		except cx_Oracle.DatabaseError:
+			logger.error("Database close error")
+			pass
 		
 	def rows_to_set(self,cursor):
 		s = set()
 		for row in cursor:
-			l.add(row[0])
-		return l
+			s.add(row[0])
+		return s
 	
 	def get_ban_list(self,sql):
 		
