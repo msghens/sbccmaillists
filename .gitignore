@@ -1,6 +1,7 @@
 #MSG Stuff
 list-managers.py
 test.py
+logs/
 
 listmaster.py
 secrets.py
