@@ -41,7 +41,8 @@ class googLib:
 		self.ggroupmembers = self.getGoogGroup()
 		
 		#remove manager list(hack)
-		self.ggroupmembers = self.ggroupmembers - rmggmemlist
+		#~ Union into list members
+		#~ self.ggroupmembers = self.ggroupmembers - rmggmemlist
 		
 		#send to list
 		for member in self.listmembers.difference(self.ggroupmembers):

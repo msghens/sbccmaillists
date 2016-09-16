@@ -19,7 +19,7 @@ logger.info(listname + ' Starting List processing')
 # This should call a view in schema sbcc_listsrv
 sql = "select 1 from dual"
 
-_list = googLib(listname)
+_list = googLib(listname,sql)
 
 
 
