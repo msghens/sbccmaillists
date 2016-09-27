@@ -197,7 +197,7 @@ class googLib:
 									time.sleep((2 ** n) + random.randint(0, 1000) / 1000)
 							except Exception,e:
 											logger.error(str(e))
-											logger.error('problems with group: {0}'.format(self.ggroup))
+											logger.error('problems with group: %s',self.ggroup)
 											#~ sys.exit('Could not update')
 											raise
 
@@ -214,7 +214,7 @@ class googLib:
 									logger.debug("deleted " + group_member + " to " + self.ggroup) 
 									return results
 							except errors.HttpError, e:
-									error = json.loads(e.content)
+									#~ error = json.loads(e.content)
 									errorcode = e.resp.status
 									errorreason = json.loads(e.content)['error']['errors'][0]['reason']
 									logger.warning( 'Error code: %d', errorcode)
@@ -223,7 +223,7 @@ class googLib:
 									time.sleep((2 ** n) + random.randint(0, 1000) / 1000)
 							except Exception,e:
 											logger.error(str(e))
-											logger.error('problems with group: {0}'.format(self.ggroup))
+											logger.error('problems with group: %s',self.ggroup)
 											#~ sys.exit('Could not update')
 											raise
 
