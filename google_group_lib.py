@@ -186,13 +186,13 @@ class googLib:
 									logger.debug("added " + group_member + " to " + self.ggroup)
 									return results
 							except errors.HttpError, e:
-									error = json.loads(e.content)
+									#~ error = json.loads(e.content)
 									errorcode = e.resp.status
 									errorreason = json.loads(e.content)['error']['errors'][0]['reason']
 									logger.warning('Error code: %d', errorcode)
 									logger.warning('Error message: %s', errorreason)
 									if errorcode == 409:
-											return error
+											return errorreason
 									logger.warning("Backing off")
 									time.sleep((2 ** n) + random.randint(0, 1000) / 1000)
 							except Exception,e:
