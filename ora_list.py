@@ -3,6 +3,7 @@ Oracle access for  mail listlists.
 http://www.oracle.com/technetwork/articles/dsl/prez-transactions-lobs-089563.html
 """
 
+# -*- coding: utf-8 -*-
 import cx_Oracle
 from secrets import banHOST,banUSER,banPASS,banPORT,banSID
 

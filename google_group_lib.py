@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # Module to keep google group info in one place
 #
