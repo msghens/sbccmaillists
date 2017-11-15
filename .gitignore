@@ -1,6 +1,9 @@
 #MSG Stuff
+<<<<<<< HEAD
 list-all-campus.py
 list-all-faculty.py
+=======
+>>>>>>> 4ba1858ed6fc6212092228d7829653458bd2e49d
 list-managers.py
 test.py
 logs/
