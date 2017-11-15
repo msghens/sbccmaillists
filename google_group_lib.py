@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # Module to keep google group info in one place
 #
@@ -11,6 +12,10 @@ from oauth2client import tools
 from listmaster import listmasters,rmggmemlist
 from ora_list import ora_sbcc_lists
 import sys
+import time
+import random
+try: import simplejson as json
+except ImportError: import json
 
 import logging
 
@@ -41,7 +46,8 @@ class googLib:
 		self.ggroupmembers = self.getGoogGroup()
 		
 		#remove manager list(hack)
-		self.ggroupmembers = self.ggroupmembers - rmggmemlist
+		#~ Union into list members
+		#~ self.ggroupmembers = self.ggroupmembers - rmggmemlist
 		
 		#send to list
 		for member in self.listmembers.difference(self.ggroupmembers):
@@ -71,6 +77,7 @@ class googLib:
 		try:
 			import argparse
 			flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+			flags.noauth_local_webserver = True
 		except ImportError:
 			flags = None
 		
@@ -122,7 +129,7 @@ class googLib:
 									break
 
 					except errors.HttpError as error:
-							print 'An error occurred: %s' % error
+							logger.warnning('An error occurred: %s', str(error))
 							break
 
 			user = set()
@@ -156,7 +163,7 @@ class googLib:
 									break
 
 					except errors.HttpError as error:
-							print 'An error occurred: %s' % error
+							logger.notice('An error occurred: %s', error)
 							break
 
 			user = list()
@@ -180,20 +187,20 @@ class googLib:
 									logger.debug("added " + group_member + " to " + self.ggroup)
 									return results
 							except errors.HttpError, e:
-									error = simplejson.loads(e.content)
+									#~ error = json.loads(e.content)
 									errorcode = e.resp.status
 									errorreason = json.loads(e.content)['error']['errors'][0]['reason']
-									print 'Error code: %d' % errorcode
-									print 'Error message: %s' % errorreason
+									logger.warning('Error code: %d', errorcode)
+									logger.warning('Error message: %s', errorreason)
 									if errorcode == 409:
-											return error
-									print "Backing off"
+											return errorreason
+									logger.warning("Backing off")
 									time.sleep((2 ** n) + random.randint(0, 1000) / 1000)
 							except Exception,e:
-											print str(e)
-											print 'problems with group: {0}'.format(self.ggroup)
-											sys.exit('Could not update')
-											#raise
+											logger.error(str(e))
+											logger.error('problems with group: %s',self.ggroup)
+											#~ sys.exit('Could not update')
+											raise
 
 	def delete_member_google(self,group_member):
 			#Sends the update to google.
@@ -208,18 +215,18 @@ class googLib:
 									logger.debug("deleted " + group_member + " to " + self.ggroup) 
 									return results
 							except errors.HttpError, e:
-									error = simplejson.loads(e.content)
+									#~ error = json.loads(e.content)
 									errorcode = e.resp.status
 									errorreason = json.loads(e.content)['error']['errors'][0]['reason']
-									print 'Error code: %d' % errorcode
-									print 'Error message: %s' % errorreason
-									print "Backing off"
+									logger.warning( 'Error code: %d', errorcode)
+									logger.warning('Error message: %s', errorreason)
+									logger.warning("Backing off")
 									time.sleep((2 ** n) + random.randint(0, 1000) / 1000)
 							except Exception,e:
-											print str(e)
-											print 'problems with group: {0}'.format(self.ggroup)
-											sys.exit('Could not update')
-											#raise
+											logger.error(str(e))
+											logger.error('problems with group: %s',self.ggroup)
+											#~ sys.exit('Could not update')
+											raise
 
 	def list_diff(a,b):
 		#Equivialant for list as set math a - b
